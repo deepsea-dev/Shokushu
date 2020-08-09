@@ -11,8 +11,9 @@ class Shokushu(discord.Client):
         # don't respond to ourselves
         if message.author == self.user:
             return
-        
-        if message.content.startswith('8ping'):
+    
+        # Respond if we were mentioned
+        if self.user.mentioned_in(message):
             await message.channel.send('pong')
 
 
