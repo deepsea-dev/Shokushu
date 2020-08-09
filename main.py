@@ -16,7 +16,8 @@ class Shokushu(discord.Client):
             await message.channel.send('pong')
 
 
-s = Shokushu()
+game = discord.Game("with octopodes")
+s = Shokushu(activity=game)
 token = str(os.environ['ShokushuToken'])
 print(token)
 s.run(token)
