@@ -10,9 +10,14 @@ class Shokushu(discord.Client):
         self.dcon = sqlite3.connect('shokushu.db') # Database connection
         dcursor = self.dcon.cursor()
 
-        dcursor.execute("CREATE TABLE IF NOT EXISTS users (user_id INTEGER PRIMARY KEY, username TEXT)")
-        dcursor.execute("CREATE TABLE IF NOT EXISTS anime (anime_id INTEGER PRIMARY KEY, anime_title TEXT, anime_description TEXT, anime_url TEXT)")
-        dcursor.execute("CREATE TABLE IF NOT EXISTS scores (username score_id INTEGER PRIMARY KEY, user_id)")
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Users (user_id INTEGER PRIMARY KEY, username TEXT)")
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Anime (anime_id INTEGER PRIMARY KEY, anime_title TEXT, anime_description TEXT, anime_url TEXT)")
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Scores (username score_id INTEGER PRIMARY KEY, user_id)")
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Queue (channel_id INTEGER PRIMARY KEY)")
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Queue_scores_link (queue_id INTEGER not null,\
+                                                                       anime_id INTEGER not null,\
+                                                                       FOREIGN KEY(queue_id) REFERENCES Queue(channel_id),\
+                                                                       FOREIGN KEY (anime_id) REFERENCES Anime(anime_id))")
         dcursor.close()
 
     async def on_ready(self):
@@ -25,6 +30,8 @@ class Shokushu(discord.Client):
             return
     
         dcursor = self.dcon.cursor()
+
+        # TODO maybe use AUTOINCREMENT schema?
         dcursor.execute("SELECT username FROM users WHERE username = ?", [message.author.name + message.author.discriminator])
         if dcursor.fetchone() is None:
             next_primary_key = dcursor.execute("SELECT MAX(user_id) FROM users").fetchone()[0] or -1
