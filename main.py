@@ -27,12 +27,11 @@ class Shokushu(discord.Client):
         dcursor = self.dcon.cursor()
         dcursor.execute("SELECT username FROM users WHERE username = ?", [message.author.name + message.author.discriminator])
         if dcursor.fetchone() is None:
-            next_primary_key = dcursor.execute("SELECT MAX(user_id) FROM users").fetchone()[0] or 0
+            next_primary_key = dcursor.execute("SELECT MAX(user_id) FROM users").fetchone()[0] or -1
             next_primary_key += 1
 
             dcursor.execute("INSERT INTO users VALUES (?, ?)", [next_primary_key, message.author.name + message.author.discriminator])
             self.dcon.commit()
-            dcursor.execute("SELECT username FROM users WHERE username = ?", [message.author.name + message.author.discriminator])
 
         # Respond if we were mentioned
         if self.user.mentioned_in(message) and len(message.content.split(" ")) > 1:
