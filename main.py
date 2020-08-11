@@ -2,6 +2,8 @@ import sqlite3
 import discord
 import os
 from DBManager import DBManager
+from random import randint
+from Anime import Anime
 
 class Shokushu(discord.Client):
 
@@ -27,6 +29,26 @@ class Shokushu(discord.Client):
             print("we were mentioned")
             command = message.content.split(" ")[1]
             message.content = " ".join(message.content.split(" ")[2:]) # Strip out the mention and command for easier message handling
+
+
+            if command == "add_anime":
+                
+                print("trying to add anime")
+                a = Anime(randint(0, 1000), "test title", "test description", "test url")
+                self.db_manager.add_anime(a)
+
+                await message.channel.send("added anime: " + str(vars(a)))
+
+            if command == "get_anime":
+                
+                anime = self.db_manager.get_anime_from_id(message.content.strip())
+
+                if anime:
+                    await message.channel.send("got anime: " + str(vars(anime)))
+                else:
+                    await message.channel.send("couldn't find that anime owo")
+
+
 
         
 
