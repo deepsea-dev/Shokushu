@@ -1,35 +1,14 @@
 import sqlite3
 import discord
 import os
+from DBManager import DBManager
 
 class Shokushu(discord.Client):
 
     def __init__(self, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-        self.dcon = sqlite3.connect('shokushu.db') # Database connection
-        dcursor = self.dcon.cursor()
-
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Users (user_id INTEGER PRIMARY KEY, username TEXT)")
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Anime (anime_id INTEGER PRIMARY KEY, anime_title TEXT, anime_description TEXT, anime_url TEXT)")
-
-        # The scores table links a user and an anime and also stores the score that they gave it
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Scores (score_id INTEGER PRIMARY KEY,\
-                                                            user_id INTEGER,\
-                                                            anime_id INTEGER,\
-                                                            score INTEGER not null,\
-                                                            FOREIGN KEY(user_id) REFERENCES Users(user_id)\
-                                                            FOREIGN KEY (anime_id) REFERENCES Anime(anime_id))")
-
-        # Stores all the queues that the bot has
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Queue (channel_id INTEGER PRIMARY KEY)")
-
-        # Links queues and animes
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Queue_anime_link (queue_id INTEGER not null,\
-                                                                       anime_id INTEGER not null,\
-                                                                       FOREIGN KEY(queue_id) REFERENCES Queue(channel_id),\
-                                                                       FOREIGN KEY (anime_id) REFERENCES Anime(anime_id))")
-        dcursor.close()
+        self.db_manager = DBManager()
 
     async def on_ready(self):
         print("logged on as", self.user)
@@ -40,23 +19,16 @@ class Shokushu(discord.Client):
         if message.author == self.user:
             return
     
-        dcursor = self.dcon.cursor()
-
-        # TODO maybe use AUTOINCREMENT schema?
-        dcursor.execute("SELECT username FROM users WHERE username = ?", [message.author.name + message.author.discriminator])
-        if dcursor.fetchone() is None:
-            next_primary_key = dcursor.execute("SELECT MAX(user_id) FROM users").fetchone()[0] or -1
-            next_primary_key += 1
-
-            dcursor.execute("INSERT INTO users VALUES (?, ?)", [next_primary_key, message.author.name + message.author.discriminator])
-            self.dcon.commit()
+        self.db_manager.add_user_if_required(message.author.name)
 
         # Respond if we were mentioned
         if self.user.mentioned_in(message) and len(message.content.split(" ")) > 1:
+
+            print("we were mentioned")
             command = message.content.split(" ")[1]
             message.content = " ".join(message.content.split(" ")[2:]) # Strip out the mention and command for easier message handling
 
-        dcursor.close()
+        
 
 game = discord.Game("with octopodes")
 s = Shokushu(activity=game)
