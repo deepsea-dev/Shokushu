@@ -12,9 +12,20 @@ class Shokushu(discord.Client):
 
         dcursor.execute("CREATE TABLE IF NOT EXISTS Users (user_id INTEGER PRIMARY KEY, username TEXT)")
         dcursor.execute("CREATE TABLE IF NOT EXISTS Anime (anime_id INTEGER PRIMARY KEY, anime_title TEXT, anime_description TEXT, anime_url TEXT)")
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Scores (username score_id INTEGER PRIMARY KEY, user_id)")
+
+        # The scores table links a user and an anime and also stores the score that they gave it
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Scores (score_id INTEGER PRIMARY KEY,\
+                                                            user_id INTEGER,\
+                                                            anime_id INTEGER,\
+                                                            score INTEGER not null,\
+                                                            FOREIGN KEY(user_id) REFERENCES Users(user_id)\
+                                                            FOREIGN KEY (anime_id) REFERENCES Anime(anime_id))")
+
+        # Stores all the queues that the bot has
         dcursor.execute("CREATE TABLE IF NOT EXISTS Queue (channel_id INTEGER PRIMARY KEY)")
-        dcursor.execute("CREATE TABLE IF NOT EXISTS Queue_scores_link (queue_id INTEGER not null,\
+
+        # Links queues and animes
+        dcursor.execute("CREATE TABLE IF NOT EXISTS Queue_anime_link (queue_id INTEGER not null,\
                                                                        anime_id INTEGER not null,\
                                                                        FOREIGN KEY(queue_id) REFERENCES Queue(channel_id),\
                                                                        FOREIGN KEY (anime_id) REFERENCES Anime(anime_id))")
