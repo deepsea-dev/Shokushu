@@ -69,7 +69,7 @@ class DBManager(object):
         ''' inserts an anime object into the anime table '''
         dcursor = self.dcon.cursor()
 
-        dcursor.execute("INSERT INTO Anime VALUES (?,?,?,?)", 
+        dcursor.execute("INSERT or IGNORE INTO Anime VALUES (?,?,?,?)", 
                         [anime.id, anime.title, anime.description, anime.my_anime_list_url])
         self.dcon.commit()
         dcursor.close()

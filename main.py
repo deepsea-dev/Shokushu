@@ -1,6 +1,10 @@
 import sqlite3
 import discord
 import os
+
+from jikanpy import Jikan
+
+
 from DBManager import DBManager
 from random import randint
 from Anime import Anime
@@ -11,6 +15,8 @@ class Shokushu(discord.Client):
 
         super().__init__(*args, **kwargs)
         self.db_manager = DBManager()
+
+        self.jikan = Jikan()
 
     async def on_ready(self):
         print("logged on as", self.user)
@@ -35,10 +41,27 @@ class Shokushu(discord.Client):
                 if command == "add_anime":
                     
                     print("trying to add anime")
-                    a = Anime(randint(0, 1000), "test title", "test description", "test url")
-                    self.db_manager.add_anime(a)
 
-                    await message.channel.send("added anime: " + str(vars(a)))
+                    id = message.content.strip()
+
+                    try:
+                        anime_info = self.jikan.anime(int(id))
+
+                    except Exception as e:
+
+                        print(repr(e))
+                        await message.channel.send("there was a problem getting that anime")
+                        return
+
+                    title = anime_info['title_english']
+                    description = anime_info['synopsis']
+                    url = anime_info['url']
+
+                    a = Anime(id, title, description, url)
+
+                    self.db_manager.add_anime(a)                   
+
+                    await message.channel.send("Added: ***{0}*** \n {1}".format(title, url))
 
                 if command == "get_anime":
                     
@@ -70,13 +93,13 @@ class Shokushu(discord.Client):
                         
                         # Build the anime string
 
-                        STRING_TEMPLATE = "***Title: {0}*** \n Description: {1}"
+                        STRING_TEMPLATE = "***{0}*** \n {1}"
 
                         message_string = "（っ＾▿＾） I found these animes: \n"
 
-                        for anime in animes:
+                        for i, anime in enumerate(animes):
 
-                            message_string += STRING_TEMPLATE.format(anime.title, anime.description) + "\n"
+                            message_string += STRING_TEMPLATE.format(i, anime.my_anime_list_url) + "\n"
 
 
                         await message.channel.send(message_string)
@@ -85,7 +108,7 @@ class Shokushu(discord.Client):
                         await message.channel.send("（ つ︣﹏╰） no anime in that queue")
 
         except Exception as e:
-            print(str(e))
+            print(repr(e))
             await message.channel.send("oh no ; _ ; something went wrong")
 
 
