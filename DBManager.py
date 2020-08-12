@@ -73,3 +73,53 @@ class DBManager(object):
                         [anime.id, anime.title, anime.description, anime.my_anime_list_url])
         self.dcon.commit()
         dcursor.close()
+
+    def get_anime_in_queue(self, queue_id):
+        ''' returns a list of the anime in a queue as anime objects '''
+        
+        dcursor = self.dcon.cursor()
+
+        db_output = dcursor.execute("SELECT * FROM Queue_anime_link WHERE queue_id = ?", (queue_id,)).fetchall()
+
+        if db_output: # If something was returned
+            
+            animes = []
+            for anime_tuple in db_output:
+
+                anime_id = anime_tuple[1]
+
+                animes.append(self.get_anime_from_id(anime_id))
+
+
+            return animes
+
+        else: # If nothing was returned
+
+            print("nothing in that queue")
+            return None
+
+
+
+    def add_to_queue(self, queue_id, anime_id):
+        ''' inserts an anime into a specific queue '''
+
+        dcursor = self.dcon.cursor()
+
+        # First check to see if the queue exists
+
+        if not dcursor.execute("SELECT * from Queue WHERE channel_id = ?", (queue_id,)).fetchone():
+            # If it doesn't exist
+
+            dcursor.execute("INSERT INTO Queue VALUES (?)", (queue_id,)) # Insert the queue in
+        
+        # If we've got to here the queue must exist and the anime must exist as in the 
+        # parse we check to see if the anime exists
+
+        dcursor.execute("INSERT INTO Queue_anime_link VALUES (?, ?)", (queue_id, anime_id))
+
+        self.dcon.commit()
+        dcursor.close()
+        return True
+
+
+        
